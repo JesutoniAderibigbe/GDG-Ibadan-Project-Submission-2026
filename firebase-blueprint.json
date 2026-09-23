@@ -13,6 +13,8 @@
         "whatBuilt": { "type": "string", "maxLength": 2000 },
         "whyBuilt": { "type": "string", "maxLength": 2000 },
         "aiToolsUsed": { "type": "string" },
+        "mediaUrl": { "type": "string", "description": "Download URL of an optional Cloud Storage screenshot/video, uploaded to submissions/{submissionId}/media.*" },
+        "mediaType": { "type": "string", "enum": ["image", "video"] },
         "createdAt": { "type": "timestamp" }
       },
       "required": ["teamName", "teamMembers", "projectTitle", "projectLink", "whatBuilt", "whyBuilt", "aiToolsUsed", "createdAt"]

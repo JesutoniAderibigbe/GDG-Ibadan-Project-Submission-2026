@@ -7,7 +7,10 @@ service cloud.firestore {
 
     function isValidSubmission(data) {
       return data.keys().hasAll(['teamName', 'teamMembers', 'projectTitle', 'projectLink', 'whatBuilt', 'whyBuilt', 'aiToolsUsed', 'createdAt'])
-        && (data.keys().size() == 8 || (data.keys().size() == 9 && 'githubLink' in data))
+        && data.keys().size() == 8
+          + (('githubLink' in data) ? 1 : 0)
+          + (('mediaUrl' in data) ? 1 : 0)
+          + (('mediaType' in data) ? 1 : 0)
         && data.teamName is string && data.teamName.size() > 0 && data.teamName.size() <= 150
         && data.teamMembers is string && data.teamMembers.size() > 0 && data.teamMembers.size() <= 1000
         && data.projectTitle is string && data.projectTitle.size() > 0 && data.projectTitle.size() <= 150
@@ -16,6 +19,10 @@ service cloud.firestore {
         && data.whatBuilt is string && data.whatBuilt.size() > 0 && data.whatBuilt.size() <= 3000
         && data.whyBuilt is string && data.whyBuilt.size() > 0 && data.whyBuilt.size() <= 3000
         && data.aiToolsUsed is string && data.aiToolsUsed.size() > 0 && data.aiToolsUsed.size() <= 1000
+        // mediaUrl and mediaType are optional but must be present/absent together
+        && (('mediaUrl' in data) == ('mediaType' in data))
+        && (!('mediaUrl' in data) || (data.mediaUrl is string && data.mediaUrl.size() > 0 && data.mediaUrl.size() <= 1000))
+        && (!('mediaType' in data) || (data.mediaType is string && (data.mediaType == 'image' || data.mediaType == 'video')))
         && data.createdAt == request.time;
     }
 

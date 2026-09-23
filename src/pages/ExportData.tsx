@@ -41,6 +41,8 @@ export default function ExportData() {
             whatBuilt: d.whatBuilt,
             whyBuilt: d.whyBuilt,
             aiToolsUsed: (d.aiToolsUsed || "").split(',').map((x: string) => x.trim()).filter(Boolean),
+            mediaUrl: d.mediaUrl || null,
+            mediaType: d.mediaType || null,
             submittedAt: d.createdAt?.toDate?.()?.toISOString() || null,
             ratings: allRatings[doc.id] || []
           });
@@ -72,7 +74,7 @@ export default function ExportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `build-a-thon-submissions-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `devfest-ibadan-2026-project-showcase-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -85,26 +87,26 @@ export default function ExportData() {
     <div className="min-h-screen bg-slate-950 text-slate-300 font-mono flex flex-col">
       <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
         <div>
-          <h1 className="text-white font-bold text-lg flex items-center gap-2">
-			{'{ }'} JSON Export
+          <h1 className="text-white font-display font-bold text-lg flex items-center gap-2">
+			<span className="text-brand-yellow">{'{ }'}</span> JSON Export
 		  </h1>
           <p className="text-xs text-slate-500 mt-1">Raw machine-readable data for AI processing or web scraping.</p>
         </div>
         <div className="flex gap-3">
-          <a href="/judges" className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded flex items-center gap-2 transition mr-4">
+          <a href="/judges" className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-full flex items-center gap-2 transition mr-4">
             <ChevronLeft className="w-4 h-4" />
             Back to Dashboard
           </a>
-          <button 
+          <button
             onClick={handleCopy}
-            className="px-4 py-2 border border-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded flex items-center gap-2 transition"
+            className="px-4 py-2 border border-slate-700 hover:bg-slate-800 text-white text-xs font-bold rounded-full flex items-center gap-2 transition"
           >
-            {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-brand-green" /> : <Copy className="w-4 h-4" />}
             {copied ? 'Copied to Clipboard!' : 'Copy to Clipboard'}
           </button>
-          <button 
+          <button
             onClick={handleDownload}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded flex items-center gap-2 transition"
+            className="px-4 py-2 bg-brand-blue hover:bg-blue-600 text-white text-xs font-bold rounded-full flex items-center gap-2 transition"
           >
             <Download className="w-4 h-4" />
             Download .json
