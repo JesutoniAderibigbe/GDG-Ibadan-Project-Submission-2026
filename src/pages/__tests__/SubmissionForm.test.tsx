@@ -44,6 +44,7 @@ describe('SubmissionForm', () => {
     validateMediaFileMock.mockReset();
     uploadToCloudinaryMock.mockReset();
     uploadToCloudinaryMock.mockResolvedValue('https://res.cloudinary.com/demo/image/upload/v1/media.jpg');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ ok: true }) }));
   });
 
   it('renders all required fields and no judges links', () => {
@@ -102,6 +103,27 @@ describe('SubmissionForm', () => {
     expect(payload).not.toHaveProperty('mediaUrl');
     expect(payload).not.toHaveProperty('mediaType');
     expect(uploadToCloudinaryMock).not.toHaveBeenCalled();
+
+    expect(fetch).toHaveBeenCalledWith('/api/notify', expect.objectContaining({ method: 'POST' }));
+    const notifyBody = JSON.parse((fetch as any).mock.calls[0][1].body);
+    expect(notifyBody).toEqual({
+      teamName: 'Neural Ninjas',
+      projectTitle: 'Smart Irrigation Pro',
+      projectLink: 'https://demo.example.com',
+      aiToolsUsed: 'Gemini',
+    });
+  });
+
+  it('still shows the success dialog even if the organizer-notify request fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network down')));
+
+    render(<SubmissionForm />);
+    fillRequiredFields();
+
+    await userEvent.click(screen.getByRole('button', { name: /submit project/i }));
+
+    await waitFor(() => expect(addDocMock).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText(/submission received/i)).toBeInTheDocument();
   });
 
   it('omits githubLink from the payload when left blank', async () => {

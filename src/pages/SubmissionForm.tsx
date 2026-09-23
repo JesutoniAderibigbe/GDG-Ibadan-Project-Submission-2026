@@ -1,10 +1,83 @@
 import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
 import { validateMediaFile, uploadToCloudinary, type MediaType } from '../lib/media';
 import { Rocket, Loader2, Image as ImageIcon, Video, X } from 'lucide-react';
 
 const YEAR_COLORS = ['text-brand-blue', 'text-brand-red', 'text-brand-yellow', 'text-brand-green', 'text-brand-blue'];
+const CONFETTI_COLORS = ['bg-brand-blue', 'bg-brand-red', 'bg-brand-yellow', 'bg-brand-green'];
+const CONFETTI = Array.from({ length: 12 }, (_, i) => ({
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  angle: (i / 12) * Math.PI * 2,
+}));
+
+function SuccessDialog({ mediaWarning, onClose }: { mediaWarning: string | null; onClose: () => void }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-brand-ink/40 backdrop-blur-sm"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Submission received"
+    >
+      <motion.div
+        className="max-w-md w-full bg-white rounded-3xl shadow-2xl border-2 border-brand-ink/10 p-10 text-center relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.75, rotateX: 12, y: 24 }}
+        animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 12 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+        style={{ perspective: 800 }}
+      >
+        {CONFETTI.map((dot, i) => (
+          <motion.span
+            key={i}
+            className={`absolute top-1/2 left-1/2 w-2 h-2 rounded-full ${dot.color}`}
+            initial={{ opacity: 1, x: 0, y: 0, scale: 0 }}
+            animate={{
+              opacity: 0,
+              scale: 1,
+              x: Math.cos(dot.angle) * 140,
+              y: Math.sin(dot.angle) * 140,
+            }}
+            transition={{ duration: 0.9, delay: 0.15, ease: 'easeOut' }}
+          />
+        ))}
+
+        <motion.div
+          className="w-20 h-20 bg-brand-blue-pastel text-brand-blue rounded-full flex items-center justify-center mx-auto mb-6 relative"
+          initial={{ scale: 0, rotate: -25 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ delay: 0.1, type: 'spring', stiffness: 380, damping: 14 }}
+        >
+          <Rocket className="w-10 h-10" />
+        </motion.div>
+
+        <motion.h2
+          className="font-display text-2xl font-bold text-brand-ink tracking-tight mb-3"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+        >
+          Submission received!
+        </motion.h2>
+        <p className="text-slate-500 mb-4">Good luck with the showcase. 🚀</p>
+
+        {mediaWarning && (
+          <div className="mb-4 px-4 py-3 bg-brand-yellow-pastel border border-brand-yellow/40 rounded-xl text-xs font-bold text-amber-800 text-left">
+            {mediaWarning}
+          </div>
+        )}
+
+        <button onClick={onClose} className="text-brand-blue font-bold hover:text-blue-700 transition">
+          Submit another project
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 type MediaState =
   | { status: 'idle' }
@@ -141,6 +214,19 @@ export default function SubmissionForm() {
         createdAt: serverTimestamp(),
       });
       setIsSuccess(true);
+
+      // Best-effort organizer notification -- never let this affect the
+      // submission itself, which already succeeded above.
+      fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamName: submissionData.teamName,
+          projectTitle: submissionData.projectTitle,
+          projectLink: submissionData.projectLink,
+          aiToolsUsed: submissionData.aiToolsUsed,
+        }),
+      }).catch((err) => console.error('Notify request failed:', err));
     } catch (err) {
       setError('Failed to submit. Please try again.');
       handleFirestoreError(err, 'create', 'submissions');
@@ -150,47 +236,27 @@ export default function SubmissionForm() {
     }
   };
 
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-[#eef6fc] font-sans text-brand-ink flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-3xl shadow-sm border-2 border-brand-ink/10 p-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="w-20 h-20 bg-brand-blue-pastel text-brand-blue rounded-full flex items-center justify-center mx-auto mb-6">
-            <Rocket className="w-10 h-10" />
-          </div>
-          <h2 className="font-display text-2xl font-bold text-brand-ink tracking-tight mb-3">Submission received!</h2>
-          <p className="text-slate-500 mb-4">Good luck with the showcase. 🚀</p>
-          {mediaWarning && (
-            <div className="mb-4 px-4 py-3 bg-brand-yellow-pastel border border-brand-yellow/40 rounded-xl text-xs font-bold text-amber-800 text-left">
-              {mediaWarning}
-            </div>
-          )}
-          <button
-            onClick={() => {
-              setIsSuccess(false);
-              setMediaWarning(null);
-              setFormData({
-                teamName: '',
-                teamMembers: '',
-                projectTitle: '',
-                projectLink: '',
-                githubLink: '',
-                whatBuilt: '',
-                whyBuilt: '',
-                aiToolsUsed: '',
-              });
-              clearMedia();
-            }}
-            className="text-brand-blue font-bold hover:text-blue-700 transition"
-          >
-            Submit another project
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const resetForm = () => {
+    setIsSuccess(false);
+    setMediaWarning(null);
+    setFormData({
+      teamName: '',
+      teamMembers: '',
+      projectTitle: '',
+      projectLink: '',
+      githubLink: '',
+      whatBuilt: '',
+      whyBuilt: '',
+      aiToolsUsed: '',
+    });
+    clearMedia();
+  };
 
   return (
     <div className="min-h-screen bg-[#eef6fc] font-sans text-brand-ink py-12 px-4 sm:px-6 relative">
+      <AnimatePresence>
+        {isSuccess && <SuccessDialog mediaWarning={mediaWarning} onClose={resetForm} />}
+      </AnimatePresence>
       <div className="max-w-xl mx-auto mt-10">
         <div className="mb-8 text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-1 font-display font-bold text-lg mb-6 border border-brand-ink rounded-full px-4 py-1 bg-white/70">

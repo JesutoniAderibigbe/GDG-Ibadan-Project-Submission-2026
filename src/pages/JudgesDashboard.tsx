@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, onSnapshot, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, collectionGroup, query, orderBy, onSnapshot, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { optimizedMediaUrl } from '../lib/media';
 import { formatDistanceToNow } from 'date-fns';
@@ -170,23 +170,30 @@ export default function JudgesDashboard() {
     return () => unsubscribeSubmissions();
   }, [judgeId]);
 
-  // Separate effect to fetch ratings individually for each submission
+  // Single collectionGroup listener for this judge's ratings, instead of one
+  // listener per submission -- that scales O(1) with submission count rather
+  // than O(N), and doesn't get torn down/recreated on every submissions update.
   useEffect(() => {
-    if (!judgeId || submissions.length === 0) return;
+    if (!judgeId) return;
 
-    const unsubscribers = submissions.map(sub => {
-      const ratingRef = doc(db, 'submissions', sub.id, 'ratings', judgeId);
-      return onSnapshot(ratingRef, (docSnap) => {
-        if (docSnap.exists()) {
-          setMyRatings(prev => ({ ...prev, [sub.id]: docSnap.data() as Rating }));
-        }
-      });
-    });
+    const q = query(collectionGroup(db, 'ratings'), where('judgeId', '==', judgeId));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const ratingsBySubmission: Record<string, Rating> = {};
+        snapshot.forEach((docSnap) => {
+          const submissionId = docSnap.ref.parent.parent?.id;
+          if (submissionId) {
+            ratingsBySubmission[submissionId] = docSnap.data() as Rating;
+          }
+        });
+        setMyRatings(ratingsBySubmission);
+      },
+      (error) => handleFirestoreError(error, 'list', 'ratings (collectionGroup)')
+    );
 
-    return () => {
-      unsubscribers.forEach(unsub => unsub());
-    };
-  }, [submissions, judgeId]);
+    return () => unsubscribe();
+  }, [judgeId]);
 
   if (!judgeId) {
     return (
@@ -275,6 +282,9 @@ export default function JudgesDashboard() {
                 Recent Submissions ({filteredSubmissions.length})
               </h3>
               <div className="flex items-center gap-4">
+                <a href="/leaderboard" className="text-xs font-mono font-bold text-brand-blue uppercase tracking-widest hover:underline">
+                  View Leaderboard
+                </a>
                 <span className="text-xs text-brand-green font-mono font-bold flex items-center gap-2">
                   <div className="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
                   Live Update Active

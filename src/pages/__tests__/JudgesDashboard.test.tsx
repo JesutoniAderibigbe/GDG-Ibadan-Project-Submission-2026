@@ -39,6 +39,7 @@ const submissionsFixture = [
 
 vi.mock('firebase/firestore', () => ({
   collection: vi.fn((_db, name) => ({ type: 'collection', name })),
+  collectionGroup: vi.fn((_db, name) => ({ type: 'collectionGroup', name })),
   query: vi.fn((ref) => ref),
   orderBy: vi.fn(),
   where: vi.fn(),
@@ -51,8 +52,9 @@ vi.mock('firebase/firestore', () => ({
         forEach: (cb: (d: unknown) => void) =>
           submissionsFixture.forEach((s) => cb({ id: s.id, data: () => s.data })),
       });
-    } else if (ref.type === 'doc') {
-      onNext({ exists: () => false, data: () => undefined });
+    } else if (ref.type === 'collectionGroup' && ref.name === 'ratings') {
+      // No existing ratings by default for this judge.
+      onNext({ forEach: (_cb: (d: unknown) => void) => {} });
     }
     return () => {};
   }),
@@ -146,5 +148,46 @@ describe('JudgesDashboard', () => {
     expect(ref.path).toBe('submissions/sub1/ratings/judge1');
     expect(payload).toMatchObject({ score: 87, comment: 'Loved the demo', judgeId: 'judge1' });
     expect(options).toEqual({ merge: true });
+  });
+
+  it('shows a link back to the leaderboard', async () => {
+    render(<JudgesDashboard />);
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
+    await screen.findByText('Smart Irrigation Pro');
+
+    const link = screen.getByRole('link', { name: /view leaderboard/i });
+    expect(link).toHaveAttribute('href', '/leaderboard');
+  });
+
+  it('prefills an existing rating from the single collectionGroup ratings listener', async () => {
+    const { onSnapshot } = await import('firebase/firestore');
+    (onSnapshot as ReturnType<typeof vi.fn>).mockImplementationOnce((ref: any, onNext: any) => {
+      // submissions listener (first subscription set up by the component)
+      onNext({
+        forEach: (cb: (d: unknown) => void) =>
+          submissionsFixture.forEach((s) => cb({ id: s.id, data: () => s.data })),
+      });
+      return () => {};
+    }).mockImplementationOnce((ref: any, onNext: any) => {
+      // ratings collectionGroup listener, pre-seeded with judge1's existing score on sub1
+      onNext({
+        forEach: (cb: (d: unknown) => void) =>
+          cb({
+            data: () => ({ score: 72, comment: 'Solid', judgeId: 'judge1' }),
+            ref: { parent: { parent: { id: 'sub1' } } },
+          }),
+      });
+      return () => {};
+    });
+
+    render(<JudgesDashboard />);
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
+    await screen.findByText('Smart Irrigation Pro');
+
+    const scoreInputs = await screen.findAllByPlaceholderText('0');
+    expect(scoreInputs[0]).toHaveValue(72);
+    expect(await screen.findByRole('button', { name: /update rating/i })).toBeInTheDocument();
   });
 });
