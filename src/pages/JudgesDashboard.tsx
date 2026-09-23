@@ -275,9 +275,6 @@ export default function JudgesDashboard() {
                 Recent Submissions ({filteredSubmissions.length})
               </h3>
               <div className="flex items-center gap-4">
-                 <a href="/leaderboard" className="text-xs font-mono font-bold text-brand-blue uppercase tracking-widest hover:underline">
-                   View Leaderboard
-                 </a>
                 <span className="text-xs text-brand-green font-mono font-bold flex items-center gap-2">
                   <div className="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
                   Live Update Active

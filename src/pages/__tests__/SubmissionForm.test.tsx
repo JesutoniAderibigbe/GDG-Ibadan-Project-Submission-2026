@@ -57,10 +57,10 @@ describe('SubmissionForm', () => {
     expect(screen.getByLabelText(/why did you build it/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/google ai tools used/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/screenshot or demo clip/i)).toBeInTheDocument();
-    // Judges entry points should no longer be public on this page.
+    // Judges/leaderboard entry points should no longer be public on this page.
     expect(screen.queryByText(/judges login/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/judges dashboard/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/view leaderboard/i)).toBeInTheDocument();
+    expect(screen.queryByText(/view leaderboard/i)).not.toBeInTheDocument();
   });
 
   it('blocks submission when "what did you build" exceeds 200 words', async () => {
@@ -177,7 +177,7 @@ describe('SubmissionForm', () => {
     expect(addDocMock).not.toHaveBeenCalled();
   });
 
-  it('shows the upload error and does not write to Firestore when the Cloudinary upload fails', async () => {
+  it('still submits (without media) and warns the user when the Cloudinary upload fails', async () => {
     validateMediaFileMock.mockResolvedValue('image');
     uploadToCloudinaryMock.mockRejectedValue(new Error('Upload failed. Check your connection and try again.'));
 
@@ -191,7 +191,14 @@ describe('SubmissionForm', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /submit project/i }));
 
-    expect(await screen.findByText(/check your connection/i)).toBeInTheDocument();
-    expect(addDocMock).not.toHaveBeenCalled();
+    // A media-upload failure (Cloudinary outage/quota) must not block the
+    // actual submission — the team's entry still gets written.
+    await waitFor(() => expect(addDocMock).toHaveBeenCalledTimes(1));
+    const [, payload] = addDocMock.mock.calls[0];
+    expect(payload).not.toHaveProperty('mediaUrl');
+    expect(payload).not.toHaveProperty('mediaType');
+
+    expect(await screen.findByText(/submission received/i)).toBeInTheDocument();
+    expect(await screen.findByText(/media upload failed/i)).toBeInTheDocument();
   });
 });

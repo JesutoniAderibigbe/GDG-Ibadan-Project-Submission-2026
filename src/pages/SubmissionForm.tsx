@@ -34,6 +34,7 @@ export default function SubmissionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mediaWarning, setMediaWarning] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
@@ -84,6 +85,7 @@ export default function SubmissionForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setMediaWarning(null);
 
     // Simple word count validation
     const whatBuiltWords = formData.whatBuilt.trim().split(/\s+/).length;
@@ -116,10 +118,14 @@ export default function SubmissionForm() {
         mediaUrl = await uploadToCloudinary(media.file, setUploadProgress);
         mediaType = media.mediaType;
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Media upload failed. Please try again.');
-        setIsSubmitting(false);
-        setUploadProgress(null);
-        return;
+        // Never let a media-upload failure (Cloudinary outage, quota, network)
+        // block the actual submission — the team's entry still matters more
+        // than the screenshot. Submit without media and tell them afterward.
+        setMediaWarning(
+          err instanceof Error
+            ? `Your project was submitted, but the media upload failed: ${err.message}`
+            : 'Your project was submitted, but the media upload failed. You can email an organizer to add it manually.'
+        );
       }
     }
 
@@ -152,10 +158,16 @@ export default function SubmissionForm() {
             <Rocket className="w-10 h-10" />
           </div>
           <h2 className="font-display text-2xl font-bold text-brand-ink tracking-tight mb-3">Submission received!</h2>
-          <p className="text-slate-500 mb-8">Good luck with the showcase. 🚀</p>
+          <p className="text-slate-500 mb-4">Good luck with the showcase. 🚀</p>
+          {mediaWarning && (
+            <div className="mb-4 px-4 py-3 bg-brand-yellow-pastel border border-brand-yellow/40 rounded-xl text-xs font-bold text-amber-800 text-left">
+              {mediaWarning}
+            </div>
+          )}
           <button
             onClick={() => {
               setIsSuccess(false);
+              setMediaWarning(null);
               setFormData({
                 teamName: '',
                 teamMembers: '',
@@ -179,11 +191,6 @@ export default function SubmissionForm() {
 
   return (
     <div className="min-h-screen bg-[#eef6fc] font-sans text-brand-ink py-12 px-4 sm:px-6 relative">
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex gap-4">
-        <a href="/leaderboard" className="px-4 py-1.5 bg-white/70 border border-brand-ink hover:bg-white text-brand-ink text-[10px] font-mono font-bold rounded-full uppercase tracking-wider transition">
-          View Leaderboard
-        </a>
-      </div>
       <div className="max-w-xl mx-auto mt-10">
         <div className="mb-8 text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-1 font-display font-bold text-lg mb-6 border border-brand-ink rounded-full px-4 py-1 bg-white/70">
