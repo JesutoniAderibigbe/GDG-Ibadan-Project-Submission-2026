@@ -29,6 +29,7 @@ vi.mock('firebase/firestore', () => ({
 
 function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/team name/i), { target: { value: 'Neural Ninjas' } });
+  fireEvent.change(screen.getByLabelText(/^email/i), { target: { value: 'team@example.com' } });
   fireEvent.change(screen.getByLabelText(/project title/i), { target: { value: 'Smart Irrigation Pro' } });
   fireEvent.change(screen.getByLabelText(/team members/i), { target: { value: 'Ada, Bola' } });
   fireEvent.change(screen.getByLabelText(/demo url/i), { target: { value: 'https://demo.example.com' } });
@@ -50,6 +51,7 @@ describe('SubmissionForm', () => {
   it('renders all required fields and no judges links', () => {
     render(<SubmissionForm />);
     expect(screen.getByLabelText(/team name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/project title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/team members/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/demo url/i)).toBeInTheDocument();
@@ -99,6 +101,7 @@ describe('SubmissionForm', () => {
 
     const [, payload] = addDocMock.mock.calls[0];
     expect(payload.teamName).toBe('Neural Ninjas');
+    expect(payload.email).toBe('team@example.com');
     expect(payload.createdAt).toBe('SERVER_TIMESTAMP');
     expect(payload).not.toHaveProperty('mediaUrl');
     expect(payload).not.toHaveProperty('mediaType');
@@ -108,6 +111,7 @@ describe('SubmissionForm', () => {
     const notifyBody = JSON.parse((fetch as any).mock.calls[0][1].body);
     expect(notifyBody).toEqual({
       teamName: 'Neural Ninjas',
+      email: 'team@example.com',
       projectTitle: 'Smart Irrigation Pro',
       projectLink: 'https://demo.example.com',
       aiToolsUsed: 'Gemini',

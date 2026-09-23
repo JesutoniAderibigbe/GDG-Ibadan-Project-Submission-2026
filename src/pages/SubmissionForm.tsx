@@ -93,6 +93,7 @@ function formatBytes(bytes: number) {
 export default function SubmissionForm() {
   const [formData, setFormData] = useState({
     teamName: '',
+    email: '',
     teamMembers: '',
     projectTitle: '',
     projectLink: '',
@@ -222,6 +223,7 @@ export default function SubmissionForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           teamName: submissionData.teamName,
+          email: submissionData.email,
           projectTitle: submissionData.projectTitle,
           projectLink: submissionData.projectLink,
           aiToolsUsed: submissionData.aiToolsUsed,
@@ -241,6 +243,7 @@ export default function SubmissionForm() {
     setMediaWarning(null);
     setFormData({
       teamName: '',
+      email: '',
       teamMembers: '',
       projectTitle: '',
       projectLink: '',
@@ -313,6 +316,22 @@ export default function SubmissionForm() {
                   placeholder="Smart Irrigation Pro"
                 />
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="email" className="block text-[10px] font-mono font-bold uppercase text-slate-500 tracking-widest">
+                Email <span className="normal-case tracking-normal text-slate-400 font-normal">(so we can reach you if you're selected)</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-shadow"
+                placeholder="team@example.com"
+              />
             </div>
 
             <div className="space-y-1">

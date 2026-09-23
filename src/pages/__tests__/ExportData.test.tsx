@@ -12,6 +12,7 @@ const submissionsFixture = [
     id: 'sub1',
     data: {
       teamName: 'Neural Ninjas',
+      email: 'neural.ninjas@example.com',
       projectTitle: 'Smart Irrigation Pro',
       projectLink: 'https://demo1.example.com',
       githubLink: 'https://github.com/team/repo',
@@ -54,6 +55,7 @@ describe('ExportData', () => {
     const parsed = JSON.parse(pre.textContent || '[]');
 
     expect(parsed).toHaveLength(1);
+    expect(parsed[0].email).toBe('neural.ninjas@example.com');
     expect(parsed[0].teamMembers).toEqual(['Ada', 'Bola']);
     expect(parsed[0].aiToolsUsed).toEqual(['Gemini', 'Vertex']);
     expect(parsed[0].ratings).toEqual([

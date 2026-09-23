@@ -23,7 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { teamName, projectTitle, projectLink, aiToolsUsed } = (req.body ?? {}) as Record<string, unknown>;
+  const { teamName, email, projectTitle, projectLink, aiToolsUsed } = (req.body ?? {}) as Record<string, unknown>;
 
   if (typeof teamName !== 'string' || typeof projectTitle !== 'string' || !teamName.trim() || !projectTitle.trim()) {
     res.status(400).json({ error: 'Missing required fields' });
@@ -40,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const link = typeof projectLink === 'string' ? projectLink : '';
   const tools = typeof aiToolsUsed === 'string' ? aiToolsUsed : '';
+  const contactEmail = typeof email === 'string' ? email : '';
 
   try {
     const resendRes = await fetch('https://api.resend.com/emails', {
@@ -55,6 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         html: `
           <h2>New project submission</h2>
           <p><strong>Team:</strong> ${escapeHtml(teamName)}</p>
+          ${contactEmail ? `<p><strong>Contact:</strong> ${escapeHtml(contactEmail)}</p>` : ''}
           <p><strong>Project:</strong> ${escapeHtml(projectTitle)}</p>
           ${link ? `<p><strong>Demo:</strong> <a href="${escapeHtml(link)}">${escapeHtml(link)}</a></p>` : ''}
           ${tools ? `<p><strong>AI tools used:</strong> ${escapeHtml(tools)}</p>` : ''}

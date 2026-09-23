@@ -6,6 +6,7 @@
       "type": "object",
       "properties": {
         "teamName": { "type": "string" },
+        "email": { "type": "string", "description": "Team contact email, used to reach selected teams" },
         "teamMembers": { "type": "string" },
         "projectTitle": { "type": "string" },
         "projectLink": { "type": "string" },
@@ -13,11 +14,11 @@
         "whatBuilt": { "type": "string", "maxLength": 2000 },
         "whyBuilt": { "type": "string", "maxLength": 2000 },
         "aiToolsUsed": { "type": "string" },
-        "mediaUrl": { "type": "string", "description": "Download URL of an optional Cloud Storage screenshot/video, uploaded to submissions/{submissionId}/media.*" },
+        "mediaUrl": { "type": "string", "description": "Optional screenshot/video URL, uploaded to Cloudinary" },
         "mediaType": { "type": "string", "enum": ["image", "video"] },
         "createdAt": { "type": "timestamp" }
       },
-      "required": ["teamName", "teamMembers", "projectTitle", "projectLink", "whatBuilt", "whyBuilt", "aiToolsUsed", "createdAt"]
+      "required": ["teamName", "email", "teamMembers", "projectTitle", "projectLink", "whatBuilt", "whyBuilt", "aiToolsUsed", "createdAt"]
     },
     "Rating": {
       "title": "Rating",

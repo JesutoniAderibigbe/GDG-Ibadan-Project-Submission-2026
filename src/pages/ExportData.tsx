@@ -34,6 +34,7 @@ export default function ExportData() {
           results.push({
             id: doc.id,
             teamName: d.teamName,
+            email: d.email,
             projectTitle: d.projectTitle,
             projectLink: d.projectLink,
             githubLink: d.githubLink,

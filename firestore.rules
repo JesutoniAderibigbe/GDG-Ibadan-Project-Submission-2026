@@ -6,12 +6,14 @@ service cloud.firestore {
     }
 
     function isValidSubmission(data) {
-      return data.keys().hasAll(['teamName', 'teamMembers', 'projectTitle', 'projectLink', 'whatBuilt', 'whyBuilt', 'aiToolsUsed', 'createdAt'])
-        && data.keys().size() == 8
+      return data.keys().hasAll(['teamName', 'email', 'teamMembers', 'projectTitle', 'projectLink', 'whatBuilt', 'whyBuilt', 'aiToolsUsed', 'createdAt'])
+        && data.keys().size() == 9
           + (('githubLink' in data) ? 1 : 0)
           + (('mediaUrl' in data) ? 1 : 0)
           + (('mediaType' in data) ? 1 : 0)
         && data.teamName is string && data.teamName.size() > 0 && data.teamName.size() <= 150
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 320
+          && data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
         && data.teamMembers is string && data.teamMembers.size() > 0 && data.teamMembers.size() <= 1000
         && data.projectTitle is string && data.projectTitle.size() > 0 && data.projectTitle.size() <= 150
         && data.projectLink is string && data.projectLink.size() > 0 && data.projectLink.size() <= 500
