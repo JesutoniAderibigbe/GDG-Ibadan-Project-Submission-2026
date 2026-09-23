@@ -35,7 +35,7 @@ function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/demo url/i), { target: { value: 'https://demo.example.com' } });
   fireEvent.change(screen.getByLabelText(/what did you build/i), { target: { value: 'A thing that waters plants.' } });
   fireEvent.change(screen.getByLabelText(/why did you build it/i), { target: { value: 'Plants kept dying.' } });
-  fireEvent.change(screen.getByLabelText(/google ai tools used/i), { target: { value: 'Gemini' } });
+  fireEvent.change(screen.getByLabelText(/google technologies used/i), { target: { value: 'Gemini' } });
 }
 
 describe('SubmissionForm', () => {
@@ -58,7 +58,7 @@ describe('SubmissionForm', () => {
     expect(screen.getByLabelText(/github repository/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/what did you build/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/why did you build it/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/google ai tools used/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/google technologies used/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/screenshot or demo clip/i)).toBeInTheDocument();
     // Judges/leaderboard entry points should no longer be public on this page.
     expect(screen.queryByText(/judges login/i)).not.toBeInTheDocument();

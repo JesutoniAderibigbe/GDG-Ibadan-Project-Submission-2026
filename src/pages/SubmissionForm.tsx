@@ -423,7 +423,7 @@ export default function SubmissionForm() {
 
             <div className="space-y-1">
               <label htmlFor="aiToolsUsed" className="block text-[10px] font-mono font-bold uppercase text-slate-500 tracking-widest">
-                Google AI Tools Used
+                Google Technologies Used <span className="normal-case tracking-normal text-slate-400 font-normal">(Firebase, Google Cloud, Gemini)</span>
               </label>
               <input
                 type="text"
@@ -433,7 +433,7 @@ export default function SubmissionForm() {
                 value={formData.aiToolsUsed}
                 onChange={handleChange}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none transition-shadow"
-                placeholder="Gemini, Vertex..."
+                placeholder="Firebase, Google Cloud, Gemini..."
               />
             </div>
 

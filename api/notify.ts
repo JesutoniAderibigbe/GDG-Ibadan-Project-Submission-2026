@@ -59,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ${contactEmail ? `<p><strong>Contact:</strong> ${escapeHtml(contactEmail)}</p>` : ''}
           <p><strong>Project:</strong> ${escapeHtml(projectTitle)}</p>
           ${link ? `<p><strong>Demo:</strong> <a href="${escapeHtml(link)}">${escapeHtml(link)}</a></p>` : ''}
-          ${tools ? `<p><strong>AI tools used:</strong> ${escapeHtml(tools)}</p>` : ''}
+          ${tools ? `<p><strong>Google technologies used:</strong> ${escapeHtml(tools)}</p>` : ''}
           <p><a href="https://devfest-ibadan-2026.vercel.app/judges">View in Judges Dashboard</a></p>
         `,
       }),

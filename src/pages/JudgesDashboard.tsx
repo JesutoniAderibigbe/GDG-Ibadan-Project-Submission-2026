@@ -342,7 +342,7 @@ export default function JudgesDashboard() {
                   </div>
 
                   <div className="mb-5">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1.5">AI Tools Used:</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Google Technologies Used:</span>
                     <div className="flex flex-wrap gap-[4px]">
                       {(sub.aiToolsUsed || '').split(',').filter(Boolean).map((tool, i) => (
                         <span key={i} className="px-2 py-0.5 bg-brand-blue-pastel border border-brand-blue/20 rounded-full text-[10px] font-bold text-blue-700 truncate max-w-[100px]" title={tool.trim()}>
