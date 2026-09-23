@@ -423,7 +423,7 @@ export default function SubmissionForm() {
 
             <div className="space-y-1">
               <label htmlFor="aiToolsUsed" className="block text-[10px] font-mono font-bold uppercase text-slate-500 tracking-widest">
-                Google Technologies Used <span className="normal-case tracking-normal text-slate-400 font-normal">(Firebase, Google Cloud, Gemini)</span>
+                Google Technologies Used
               </label>
               <input
                 type="text"
