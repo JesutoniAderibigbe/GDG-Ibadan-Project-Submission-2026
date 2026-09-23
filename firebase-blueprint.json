@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "Submission": {
+      "title": "Submission",
+      "description": "A hackathon project submission",
+      "type": "object",
+      "properties": {
+        "teamName": { "type": "string" },
+        "teamMembers": { "type": "string" },
+        "projectTitle": { "type": "string" },
+        "projectLink": { "type": "string" },
+        "githubLink": { "type": "string" },
+        "whatBuilt": { "type": "string", "maxLength": 2000 },
+        "whyBuilt": { "type": "string", "maxLength": 2000 },
+        "aiToolsUsed": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["teamName", "teamMembers", "projectTitle", "projectLink", "whatBuilt", "whyBuilt", "aiToolsUsed", "createdAt"]
+    },
+    "Rating": {
+      "title": "Rating",
+      "description": "A judge's rating for a submission",
+      "type": "object",
+      "properties": {
+        "judgeId": { "type": "string" },
+        "score": { "type": "number", "minimum": 1, "maximum": 100 },
+        "comment": { "type": "string", "maxLength": 2000 },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["judgeId", "score", "comment", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/Submission" },
+      "description": "Collection of all hackathon submissions."
+    },
+    "/submissions/{submissionId}/ratings/{judgeId}": {
+      "schema": { "$ref": "#/entities/Rating" },
+      "description": "Ratings subcollection for each submission by judges."
+    }
+  }
+}

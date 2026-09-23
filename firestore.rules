@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} { 
+      allow read, write: if false; 
+    }
+
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['teamName', 'teamMembers', 'projectTitle', 'projectLink', 'whatBuilt', 'whyBuilt', 'aiToolsUsed', 'createdAt'])
+        && (data.keys().size() == 8 || (data.keys().size() == 9 && 'githubLink' in data))
+        && data.teamName is string && data.teamName.size() > 0 && data.teamName.size() <= 150
+        && data.teamMembers is string && data.teamMembers.size() > 0 && data.teamMembers.size() <= 1000
+        && data.projectTitle is string && data.projectTitle.size() > 0 && data.projectTitle.size() <= 150
+        && data.projectLink is string && data.projectLink.size() > 0 && data.projectLink.size() <= 500
+        && (!('githubLink' in data) || (data.githubLink is string && data.githubLink.size() > 0 && data.githubLink.size() <= 500))
+        && data.whatBuilt is string && data.whatBuilt.size() > 0 && data.whatBuilt.size() <= 3000
+        && data.whyBuilt is string && data.whyBuilt.size() > 0 && data.whyBuilt.size() <= 3000
+        && data.aiToolsUsed is string && data.aiToolsUsed.size() > 0 && data.aiToolsUsed.size() <= 1000
+        && data.createdAt == request.time;
+    }
+
+    function isValidRating(data) {
+       return data.keys().hasAll(['judgeId', 'score', 'comment', 'updatedAt'])
+        && data.keys().size() == 4
+        && data.judgeId is string && data.judgeId.size() > 0 && data.judgeId.size() <= 20
+        && data.score is number && data.score >= 0 && data.score <= 100
+        && data.comment is string && data.comment.size() >= 0 && data.comment.size() <= 2000
+        && data.updatedAt == request.time;
+    }
+
+    match /submissions/{submissionId} {
+      allow create: if isValidSubmission(request.resource.data);
+      allow read: if true;
+      allow update, delete: if false;
+
+      match /ratings/{judgeId} {
+        allow read: if true;
+        allow create: if isValidRating(request.resource.data) && judgeId == request.resource.data.judgeId;
+        allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'comment', 'updatedAt', 'judgeId'])
+                      && request.resource.data.judgeId == resource.data.judgeId
+                      && request.resource.data.score is number && request.resource.data.score >= 0 && request.resource.data.score <= 100
+                      && request.resource.data.comment is string && request.resource.data.comment.size() >= 0 && request.resource.data.comment.size() <= 2000
+                      && request.resource.data.updatedAt == request.time;
+        allow delete: if false;
+      }
+    }
+
+    match /{path=**}/ratings/{judgeId} {
+      allow read: if true;
+    }
+  }
+}
