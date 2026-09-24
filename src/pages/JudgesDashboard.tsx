@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, collectionGroup, query, orderBy, onSnapshot, where, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { optimizedMediaUrl } from '../lib/media';
+import { isValidJudge } from '../lib/judges';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, ExternalLink, Github, Users, Wrench, Clock, Activity, LayoutTemplate, ShieldCheck, Loader2 } from 'lucide-react';
 
@@ -104,6 +105,7 @@ function RatingForm({ submissionId, judgeId, existingRating }: { submissionId: s
 export default function JudgesDashboard() {
   const [judgeId, setJudgeId] = useState<string | null>(() => localStorage.getItem('judgeId'));
   const [loginInput, setLoginInput] = useState('');
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -114,11 +116,12 @@ export default function JudgesDashboard() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const id = loginInput.trim().toLowerCase();
-    if (id === 'judge1' || id === 'judge2') {
+    if (isValidJudge(id)) {
       localStorage.setItem('judgeId', id);
+      setLoginError(null);
       setJudgeId(id);
     } else {
-      alert("Invalid judge username. Use 'judge1' or 'judge2'.");
+      setLoginError('Wrong username. Contact GDG Ibadan for the right details.');
     }
   };
 
@@ -206,11 +209,19 @@ export default function JudgesDashboard() {
             <h2 className="font-display text-xl font-bold text-brand-ink">Judge Portal Login</h2>
             <p className="text-xs font-bold text-slate-500 mt-1">Enter your assigned username</p>
           </div>
+          {loginError && (
+            <div className="px-3 py-2.5 bg-brand-red-pastel border border-brand-red/30 rounded-xl text-xs font-bold text-red-700 text-center">
+              {loginError}
+            </div>
+          )}
           <input
             type="text"
-            placeholder="Username (judge1 or judge2)"
+            placeholder="Enter your username"
             value={loginInput}
-            onChange={(e) => setLoginInput(e.target.value)}
+            onChange={(e) => {
+              setLoginInput(e.target.value);
+              if (loginError) setLoginError(null);
+            }}
             className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none"
             required
           />

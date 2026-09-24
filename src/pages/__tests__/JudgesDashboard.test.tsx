@@ -65,7 +65,6 @@ describe('JudgesDashboard', () => {
     localStorage.clear();
     setDocMock.mockReset();
     setDocMock.mockResolvedValue(undefined);
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
   it('shows the login gate when no judge is logged in', () => {
@@ -73,29 +72,41 @@ describe('JudgesDashboard', () => {
     expect(screen.getByText(/judge portal login/i)).toBeInTheDocument();
   });
 
-  it('rejects an invalid judge username', async () => {
+  it('rejects an invalid judge username with an inline message, not a native alert', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
     render(<JudgesDashboard />);
     fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'intruder' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
 
-    expect(window.alert).toHaveBeenCalledWith("Invalid judge username. Use 'judge1' or 'judge2'.");
+    expect(await screen.findByText('Wrong username. Contact GDG Ibadan for the right details.')).toBeInTheDocument();
+    expect(alertSpy).not.toHaveBeenCalled();
     expect(screen.getByText(/judge portal login/i)).toBeInTheDocument();
     expect(localStorage.getItem('judgeId')).toBeNull();
   });
 
-  it('logs in a valid judge and lists submissions sorted newest first', async () => {
+  it('accepts a valid judge username in any letter case', async () => {
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'JoSh' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
 
-    expect(localStorage.getItem('judgeId')).toBe('judge1');
+    expect(localStorage.getItem('judgeId')).toBe('josh');
+    expect(screen.queryByText(/wrong username/i)).not.toBeInTheDocument();
+  });
+
+  it('logs in a valid judge and lists submissions sorted newest first', async () => {
+    render(<JudgesDashboard />);
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
+    await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
+
+    expect(localStorage.getItem('judgeId')).toBe('jesutoni');
     const titles = await screen.findAllByRole('heading', { level: 4 });
     expect(titles.map((t) => t.textContent)).toEqual(['Smart Irrigation Pro', 'Budget Buddy']);
   });
 
   it('filters submissions by search query', async () => {
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge2' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'abidemi' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
 
     await screen.findByText('Smart Irrigation Pro');
@@ -112,7 +123,7 @@ describe('JudgesDashboard', () => {
     // JS ever runs — the only way to reach the "must be between 1 and 100"
     // branch via a real submit is to leave the field empty.
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
     await screen.findByText('Smart Irrigation Pro');
 
@@ -124,7 +135,7 @@ describe('JudgesDashboard', () => {
 
   it('the score input enforces a native 1-100 range', () => {
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
     fireEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
     const scoreInput = screen.getAllByPlaceholderText('0')[0] as HTMLInputElement;
     expect(scoreInput.min).toBe('1');
@@ -133,7 +144,7 @@ describe('JudgesDashboard', () => {
 
   it('saves a valid rating with the correct doc path and payload', async () => {
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
     await screen.findByText('Smart Irrigation Pro');
 
@@ -145,14 +156,14 @@ describe('JudgesDashboard', () => {
 
     await waitFor(() => expect(setDocMock).toHaveBeenCalledTimes(1));
     const [ref, payload, options] = setDocMock.mock.calls[0];
-    expect(ref.path).toBe('submissions/sub1/ratings/judge1');
-    expect(payload).toMatchObject({ score: 87, comment: 'Loved the demo', judgeId: 'judge1' });
+    expect(ref.path).toBe('submissions/sub1/ratings/jesutoni');
+    expect(payload).toMatchObject({ score: 87, comment: 'Loved the demo', judgeId: 'jesutoni' });
     expect(options).toEqual({ merge: true });
   });
 
   it('shows a link back to the leaderboard', async () => {
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
     await screen.findByText('Smart Irrigation Pro');
 
@@ -170,11 +181,11 @@ describe('JudgesDashboard', () => {
       });
       return () => {};
     }).mockImplementationOnce((ref: any, onNext: any) => {
-      // ratings collectionGroup listener, pre-seeded with judge1's existing score on sub1
+      // ratings collectionGroup listener, pre-seeded with jesutoni's existing score on sub1
       onNext({
         forEach: (cb: (d: unknown) => void) =>
           cb({
-            data: () => ({ score: 72, comment: 'Solid', judgeId: 'judge1' }),
+            data: () => ({ score: 72, comment: 'Solid', judgeId: 'jesutoni' }),
             ref: { parent: { parent: { id: 'sub1' } } },
           }),
       });
@@ -182,7 +193,7 @@ describe('JudgesDashboard', () => {
     });
 
     render(<JudgesDashboard />);
-    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'judge1' } });
+    fireEvent.change(screen.getByPlaceholderText(/username/i), { target: { value: 'jesutoni' } });
     await userEvent.click(screen.getByRole('button', { name: /access dashboard/i }));
     await screen.findByText('Smart Irrigation Pro');
 

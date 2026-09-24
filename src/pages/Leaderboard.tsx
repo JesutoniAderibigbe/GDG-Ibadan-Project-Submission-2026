@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, collectionGroup, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { VALID_JUDGES } from '../lib/judges';
 import { Trophy, Medal, Star, Target, Users, LayoutTemplate, Activity } from 'lucide-react';
 
 interface Submission {
@@ -70,7 +71,7 @@ export default function Leaderboard() {
     const subRatings = ratings.filter((r) => r.submissionId === sub.id);
     const totalScore = subRatings.reduce((sum, r) => sum + r.score, 0);
     const judgeCount = subRatings.length;
-    const isFullyRated = judgeCount === 2; // assuming 2 judges max
+    const isFullyRated = judgeCount === VALID_JUDGES.length;
     return {
       ...sub,
       totalScore,
@@ -146,12 +147,12 @@ export default function Leaderboard() {
                      <span className="block text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest mb-1">Total Score</span>
                      <div className="flex items-baseline justify-center gap-1 text-brand-ink">
                        <span className="text-4xl font-black font-display">{data.totalScore}</span>
-                       <span className="text-sm font-bold text-slate-400">/200</span>
+                       <span className="text-sm font-bold text-slate-400">/{VALID_JUDGES.length * 100}</span>
                      </div>
                    </div>
 
                    <div className="flex flex-col gap-2">
-                     {['judge1', 'judge2'].map((jId) => {
+                     {VALID_JUDGES.map((jId) => {
                        const r = data.subRatings.find(sr => sr.judgeId === jId);
                        return (
                          <div key={jId} className="flex items-center gap-2 text-xs font-mono font-bold bg-slate-50 px-2 py-1 rounded-full">

@@ -29,9 +29,10 @@ service cloud.firestore {
     }
 
     function isValidRating(data) {
+       // Keep this judgeId allowlist in sync with VALID_JUDGES in src/lib/judges.ts
        return data.keys().hasAll(['judgeId', 'score', 'comment', 'updatedAt'])
         && data.keys().size() == 4
-        && data.judgeId is string && data.judgeId.size() > 0 && data.judgeId.size() <= 20
+        && data.judgeId in ['jesutoni', 'abidemi', 'josh']
         && data.score is number && data.score >= 0 && data.score <= 100
         && data.comment is string && data.comment.size() >= 0 && data.comment.size() <= 2000
         && data.updatedAt == request.time;

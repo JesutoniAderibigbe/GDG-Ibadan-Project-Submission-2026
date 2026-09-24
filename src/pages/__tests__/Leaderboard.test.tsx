@@ -13,9 +13,10 @@ const submissionsFixture = [
 ];
 
 const ratingsFixture = [
-  { id: 'judge1', submissionId: 'sub1', data: { judgeId: 'judge1', score: 90 } },
-  { id: 'judge2', submissionId: 'sub1', data: { judgeId: 'judge2', score: 70 } },
-  { id: 'judge1', submissionId: 'sub2', data: { judgeId: 'judge1', score: 50 } },
+  { id: 'jesutoni', submissionId: 'sub1', data: { judgeId: 'jesutoni', score: 90 } },
+  { id: 'abidemi', submissionId: 'sub1', data: { judgeId: 'abidemi', score: 70 } },
+  { id: 'josh', submissionId: 'sub1', data: { judgeId: 'josh', score: 40 } },
+  { id: 'jesutoni', submissionId: 'sub2', data: { judgeId: 'jesutoni', score: 50 } },
 ];
 
 vi.mock('firebase/firestore', () => ({
@@ -53,18 +54,20 @@ describe('Leaderboard', () => {
     expect(titles.map((t) => t.textContent)).toEqual(['Smart Irrigation Pro', 'Budget Buddy']);
   });
 
-  it('sums both judges scores correctly', async () => {
+  it('sums all three judges scores correctly, out of 300', async () => {
     render(<Leaderboard />);
     await screen.findByText('Smart Irrigation Pro');
     const totals = Array.from(document.querySelectorAll('.text-4xl.font-black')).map((el) => el.textContent);
-    expect(totals).toEqual(['160', '50']); // sub1: 90 + 70, sub2: 50 + (0, unrated)
+    expect(totals).toEqual(['200', '50']); // sub1: 90 + 70 + 40, sub2: 50 + (0, 0 unrated)
+    expect(screen.getAllByText('/300').length).toBe(2);
   });
 
-  it('shows "Pending" for a judge who has not rated yet', async () => {
+  it('shows "Pending" for judges who have not rated yet', async () => {
     render(<Leaderboard />);
     await screen.findByText('Smart Irrigation Pro');
-    // sub2 only has judge1's score; judge2 should read Pending.
+    // sub1 is fully rated by all 3 judges; sub2 only has jesutoni's score,
+    // so abidemi and josh should read Pending for sub2.
     const pendingLabels = screen.getAllByText('Pending');
-    expect(pendingLabels.length).toBeGreaterThan(0);
+    expect(pendingLabels).toHaveLength(2);
   });
 });
