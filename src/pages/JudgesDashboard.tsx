@@ -6,6 +6,27 @@ import { isValidJudge } from '../lib/judges';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, ExternalLink, Github, Users, Wrench, Clock, Activity, LayoutTemplate, ShieldCheck, Loader2 } from 'lucide-react';
 
+function ExpandableText({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 160;
+  return (
+    <div>
+      <p className={`text-sm text-slate-600 italic font-serif whitespace-pre-line break-words ${expanded || !isLong ? '' : 'line-clamp-3'}`}>
+        "{text}"
+      </p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-1.5 text-[11px] font-mono font-bold uppercase tracking-widest text-brand-blue hover:underline"
+        >
+          {expanded ? 'Show less' : 'Read more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 interface Submission {
   id: string;
   teamName: string;
@@ -347,16 +368,14 @@ export default function JudgesDashboard() {
 
                   <div className="mb-4 flex-grow">
                     <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1.5">What they built:</span>
-                    <p className="text-sm text-slate-600 line-clamp-3 italic font-serif">
-                      "{sub.whatBuilt || 'No description provided.'}"
-                    </p>
+                    <ExpandableText text={sub.whatBuilt || 'No description provided.'} />
                   </div>
 
                   <div className="mb-5">
                     <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Google Technologies Used:</span>
                     <div className="flex flex-wrap gap-[4px]">
                       {(sub.aiToolsUsed || '').split(',').filter(Boolean).map((tool, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-brand-blue-pastel border border-brand-blue/20 rounded-full text-[10px] font-bold text-blue-700 truncate max-w-[100px]" title={tool.trim()}>
+                        <span key={i} className="px-2 py-0.5 bg-brand-blue-pastel border border-brand-blue/20 rounded-full text-[10px] font-bold text-blue-700 break-words" title={tool.trim()}>
                           {tool.trim()}
                         </span>
                       ))}
