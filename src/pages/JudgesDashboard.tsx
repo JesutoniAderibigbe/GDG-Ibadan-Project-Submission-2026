@@ -30,6 +30,7 @@ function ExpandableText({ text }: { text: string }) {
 interface Submission {
   id: string;
   teamName: string;
+  email?: string;
   teamMembers: string;
   projectTitle: string;
   projectLink: string;
@@ -364,6 +365,17 @@ export default function JudgesDashboard() {
                         </span>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1.5">Contact Email:</span>
+                    {sub.email ? (
+                      <a href={`mailto:${sub.email}`} className="text-xs font-medium text-brand-blue hover:underline break-all">
+                        {sub.email}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400">N/A</span>
+                    )}
                   </div>
 
                   <div className="mb-4 flex-grow">
