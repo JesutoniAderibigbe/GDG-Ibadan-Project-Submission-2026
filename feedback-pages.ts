@@ -7,6 +7,8 @@ import path from 'node:path';
 import type { Plugin } from 'vite';
 
 export const SITE_URL = 'https://devfest-ibadan-2026.vercel.app';
+// 1200x628 crop of the DevFest Ibadan 2026 logo (public/og-image.jpg).
+export const OG_IMAGE = { path: '/og-image.jpg', width: 1200, height: 628, alt: 'DevFest Ibadan 2026 logo' };
 
 export interface PageMeta {
   file: string; // emitted file name, e.g. feedback-attendee.html
@@ -43,7 +45,12 @@ export function renderPage(indexHtml: string, page: PageMeta, siteUrl = SITE_URL
         `<meta property="og:title" content="${esc(page.title)}" />`,
         `<meta property="og:description" content="${esc(page.description)}" />`,
         `<meta property="og:url" content="${siteUrl}${page.route}" />`,
-        `<meta name="twitter:card" content="summary" />`,
+        `<meta property="og:image" content="${siteUrl}${OG_IMAGE.path}" />`,
+        `<meta property="og:image:width" content="${OG_IMAGE.width}" />`,
+        `<meta property="og:image:height" content="${OG_IMAGE.height}" />`,
+        `<meta property="og:image:alt" content="${OG_IMAGE.alt}" />`,
+        `<meta name="twitter:card" content="summary_large_image" />`,
+        `<meta name="twitter:image" content="${siteUrl}${OG_IMAGE.path}" />`,
         `<meta name="twitter:title" content="${esc(page.title)}" />`,
         `<meta name="twitter:description" content="${esc(page.description)}" />`,
       ]
