@@ -1,5 +1,20 @@
 {
   "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/feedback/attendee",
+      "destination": "/feedback-attendee.html"
+    },
+    {
+      "source": "/feedback/sponsor",
+      "destination": "/feedback-sponsor.html"
+    },
+    {
+      "source": "/feedback/admin",
+      "destination": "/feedback-admin.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ]
 }
