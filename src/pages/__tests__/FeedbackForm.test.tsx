@@ -67,12 +67,13 @@ describe('FeedbackForm', () => {
     expect(screen.queryByText(/optional/i)).not.toBeInTheDocument();
   });
 
-  it('offers the favourite session as a dropdown grouped by room', () => {
+  it('offers the favourite session as a dropdown grouped by room, including a single Vibe Lounge option', () => {
     render(<FeedbackForm kind="attendee" />);
     const select = screen.getByLabelText(/favourite session/i) as HTMLSelectElement;
     expect(select.tagName).toBe('SELECT');
-    expect(select.querySelectorAll('optgroup')).toHaveLength(4);
-    expect(select.querySelectorAll('option:not([disabled])')).toHaveLength(25);
+    expect(select.querySelectorAll('optgroup')).toHaveLength(5);
+    expect(select.querySelectorAll('option:not([disabled])')).toHaveLength(26);
+    expect(within(select).getAllByRole('option', { name: /vibe lounge/i })).toHaveLength(1);
     expect(within(select).getByRole('option', { name: /Building Distributed Systems with gRPC — Adeshina Lasisi/ })).toBeInTheDocument();
   });
 

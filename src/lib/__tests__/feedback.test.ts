@@ -72,7 +72,7 @@ describe('buildPayload (attendee)', () => {
 
   it('only accepts a favourite that is one of the real sessions', () => {
     expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, favourite: 'Some made-up talk' }).ok).toBe(false);
-    const last = SESSION_GROUPS[SESSION_GROUPS.length - 1].options.slice(-1)[0];
+    const last = SESSION_GROUPS[3].options.slice(-1)[0];
     expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, favourite: last }).ok).toBe(true);
   });
 
@@ -96,8 +96,9 @@ describe('buildPayload (sponsor)', () => {
 describe('SESSION_GROUPS', () => {
   const all = SESSION_GROUPS.flatMap((g) => g.options);
 
-  it('lists all 25 sessions across the four rooms, with no duplicates', () => {
-    expect(SESSION_GROUPS.map((g) => g.options.length)).toEqual([4, 9, 8, 4]);
+  it('lists all 25 sessions plus the Vibe Lounge, with no duplicates', () => {
+    expect(SESSION_GROUPS.map((g) => g.options.length)).toEqual([4, 9, 8, 4, 1]);
+    expect(SESSION_GROUPS[4].options).toEqual(['Vibe Lounge']);
     expect(new Set(all).size).toBe(all.length);
   });
 

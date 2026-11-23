@@ -44,7 +44,8 @@ export const CONVERSATION_BUCKETS = ['0-10', '11-30', '31-60', '60+'];
 export const SPONSOR_AGAIN = ['Definitely', 'Probably', 'Unsure', 'No'];
 
 // Every session from the DevFest Ibadan 2026 agenda, as "Title — Speaker", for
-// the favourite-session dropdown. Sponsor slots, games and breaks are left out.
+// the favourite-session dropdown. Sponsor slots, games and breaks are left out;
+// the Vibe Lounge is a single option (no facilitator names).
 export const SESSION_GROUPS: { label: string; options: string[] }[] = [
   {
     label: 'Main Hall: Keynotes & Panel',
@@ -91,6 +92,7 @@ export const SESSION_GROUPS: { label: string; options: string[] }[] = [
       'Build and Deploy a RAG AI Agent in Streamlit using Google ADK and Cloud Run — Shadrack Inusah',
     ],
   },
+  { label: 'Vibe Lounge', options: ['Vibe Lounge'] },
 ];
 
 export const ATTENDEE_FIELDS: Field[] = [

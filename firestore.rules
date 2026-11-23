@@ -68,7 +68,7 @@ service cloud.firestore {
     // anyone can register an account, but nobody else can ever have this uid.
     function isFeedbackAdmin() {
       return request.auth != null
-        && request.auth.uid in ['6vkC2F2VDSN1k2zJMZ06HykUFPj2'];
+        && request.auth.uid in ['2HTqFtbeOWZE8TQqaegagcvFOCP2'];
     }
 
     function isInt(v, lo, hi) { return v is int && v >= lo && v <= hi; }
