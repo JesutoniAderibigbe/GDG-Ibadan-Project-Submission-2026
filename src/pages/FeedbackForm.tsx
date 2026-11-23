@@ -182,6 +182,28 @@ export default function FeedbackForm({ kind }: { kind: FeedbackKind }) {
           />
         );
       }
+      case 'select':
+        return (
+          <select
+            id={f.name}
+            value={(values[f.name] as string) ?? ''}
+            onChange={(e) => set(f.name, e.target.value || undefined)}
+            className={INPUT}
+          >
+            <option value="" disabled>
+              Choose a session or speaker
+            </option>
+            {f.groups.map((g) => (
+              <optgroup key={g.label} label={g.label}>
+                {g.options.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        );
       case 'textarea':
         return (
           <textarea
@@ -242,7 +264,7 @@ export default function FeedbackForm({ kind }: { kind: FeedbackKind }) {
               )}
               {fields.filter((f) => isVisible(f, values)).map((f) => (
                 <div key={f.name} className="space-y-2">
-                  <Label field={f} htmlFor={f.kind === 'text' || f.kind === 'textarea' ? f.name : undefined} />
+                  <Label field={f} htmlFor={f.kind === 'text' || f.kind === 'textarea' || f.kind === 'select' ? f.name : undefined} />
                   {'hint' in f && f.hint && <p className="text-[11px] text-slate-400">{f.hint}</p>}
                   {renderField(f)}
                 </div>

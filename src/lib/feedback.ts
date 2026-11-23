@@ -28,6 +28,7 @@ export type Field =
   | (FieldBase & { kind: 'rating' }) // 1-5
   | (FieldBase & { kind: 'nps' }) // 0-10
   | (FieldBase & { kind: 'single'; options: string[] })
+  | (FieldBase & { kind: 'select'; groups: { label: string; options: string[] }[] })
   | (FieldBase & { kind: 'multi'; options: string[] });
 
 export function isVisible(f: Field, values: Record<string, unknown>): boolean {
@@ -42,6 +43,56 @@ export const GOAL_OPTIONS = ['Yes', 'Partly', 'No'];
 export const CONVERSATION_BUCKETS = ['0-10', '11-30', '31-60', '60+'];
 export const SPONSOR_AGAIN = ['Definitely', 'Probably', 'Unsure', 'No'];
 
+// Every session from the DevFest Ibadan 2026 agenda, as "Title — Speaker", for
+// the favourite-session dropdown. Sponsor slots, games and breaks are left out.
+export const SESSION_GROUPS: { label: string; options: string[] }[] = [
+  {
+    label: 'Main Hall: Keynotes & Panel',
+    options: [
+      'Keynote: Building the Future: How AI and Digital Innovation Can Transform Governance and Society — Oladayo Ogunbowale',
+      'Founders Panel — Haastrup Adejoke, David Adeleke, Micheal Toyinbo, Gbolahan Alli',
+      'Keynote II: Built to Last: A Future Proof Tech Career in the Age of AI — Afolabi Monsur Olaniran',
+      'Google Keynote — Soqiq Akinjobi (Geek Tutor)',
+    ],
+  },
+  {
+    label: 'Main Hall (Hall 1): Sessions',
+    options: [
+      'Building the Next Generation of Web3 Applications with AI Agents — Abdulmujeeb Sulayman',
+      'Data Has Consequences: Engineering for Privacy, Ethics, and Trust — Chelsea Adetan',
+      'Multimodal Flutter: Apps That See, Hear, and Reason Across Platforms — David Oluwabusayo',
+      'How Developers Can Thrive in the Agentic AI Era: Skills, Workflows & Mindset — Ifeoluwa Obayemi',
+      'Beyond the Form: Why Data Privacy is the Missing Layer in Nigeria’s Tech Stack — Ireoluwatomiwa Omotayo',
+      'From Wireframes to Scaffolding: What Design Becomes When AI Builds — Mary Esivue',
+      'Your Gemini Key Is in the APK: Securing AI Features in Flutter — Idris Idris',
+      'Beyond the Code: Branding – The Invisible Resume — Oreoluwa Osadugba',
+      'AI as a Product Designer’s Superpower — Temiloluwa Kayode',
+    ],
+  },
+  {
+    label: 'Hall 2: Sessions',
+    options: [
+      'Building Distributed Systems with gRPC — Adeshina Lasisi',
+      'Quantum Technology: Hype or Real? — Ahmad Abdulmajeed',
+      'Architecting the Future: Building Highly Scalable Digital Platforms for Africa — Opeyemi Ojeyinka',
+      'AI Didn’t Take My Job — It Changed It: A Frontend Engineer’s Evolution — James Uyi',
+      'Building Customer-Centric Products: The Engineering Mindset — Muritadoh Sodeeq',
+      'Debugging Burnout: Mental Wellness as a Developer’s Core Stack — Oluwatobi Oyesola',
+      'The Hidden Engineering of LLM Inference: A Deep Dive into Nano-vLLM — Praise Adegoju',
+      'Animating with Intent: Motion Design for Developers — Victor Williams',
+    ],
+  },
+  {
+    label: 'Hall 3: Workshops',
+    options: [
+      'Inside ALATPay: Exploring Our Payment Ecosystem (Wema Workshop) — Joy Offiong',
+      'Building Production Multi-Agent AI Systems with PyTorch: State Graphs, Tensor-Based Routing, & Tool-Calling Optimization — Israel Odeajo',
+      'Supercharge Code Quality: AI-Assisted Code Review with Antigravity CLI and SDK — Ahmed Olanrewaju',
+      'Build and Deploy a RAG AI Agent in Streamlit using Google ADK and Cloud Run — Shadrack Inusah',
+    ],
+  },
+];
+
 export const ATTENDEE_FIELDS: Field[] = [
   { kind: 'rating', name: 'overall', label: 'Overall experience' },
   { kind: 'nps', name: 'nps', label: 'How likely are you to recommend DevFest Ibadan to a friend?' },
@@ -51,7 +102,7 @@ export const ATTENDEE_FIELDS: Field[] = [
   { kind: 'rating', name: 'food', label: 'Food and refreshments' },
   { kind: 'rating', name: 'networking', label: 'Networking' },
   { kind: 'multi', name: 'halls', label: 'Which hall(s) did you spend most time in?', options: HALLS },
-  { kind: 'text', name: 'favourite', label: 'Favourite session or speaker', max: 300 },
+  { kind: 'select', name: 'favourite', label: 'Favourite session or speaker', groups: SESSION_GROUPS },
   { kind: 'textarea', name: 'enjoyedMost', label: 'What did you enjoy most?', max: 1500 },
   { kind: 'textarea', name: 'improve', label: 'What should we improve?', max: 1500 },
   { kind: 'single', name: 'tookQuiz', label: 'Did you take part in the quiz?', options: YES_NO },
@@ -132,6 +183,8 @@ export function buildPayload(
 
     if (f.kind === 'single') {
       if (!f.options.includes(text)) return invalid(f);
+    } else if (f.kind === 'select') {
+      if (!f.groups.some((g) => g.options.includes(text))) return invalid(f);
     } else {
       if (text.length > f.max) return { ok: false, error: `${f.label} must be at most ${f.max} characters` };
       if (f.kind === 'text' && f.inputType === 'email' && !EMAIL_RE.test(text)) {

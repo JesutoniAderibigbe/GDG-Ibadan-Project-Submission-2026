@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import FeedbackForm from '../FeedbackForm';
+import { SESSION_GROUPS } from '../../lib/feedback';
 
 const addDocMock = vi.fn();
 
@@ -35,7 +36,7 @@ function fillAttendee({ vibe = 'No' as 'Yes' | 'No' } = {}) {
   rate(/^food and refreshments/i, 3);
   rate(/^networking/i, 5);
   tick(/which hall/i, 'Vibe Lounge');
-  fireEvent.change(screen.getByLabelText(/favourite session/i), { target: { value: 'The keynote' } });
+  fireEvent.change(screen.getByLabelText(/favourite session/i), { target: { value: SESSION_GROUPS[2].options[0] } });
   fireEvent.change(screen.getByLabelText(/what did you enjoy most/i), { target: { value: 'The quiz' } });
   fireEvent.change(screen.getByLabelText(/what should we improve/i), { target: { value: 'More seats' } });
   choose(/take part in the quiz/i, 'No');
@@ -64,6 +65,15 @@ describe('FeedbackForm', () => {
     expect(screen.getByRole('radio', { name: 'First time in tech' })).toBeInTheDocument();
     expect(screen.queryByText(/project showcase/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/optional/i)).not.toBeInTheDocument();
+  });
+
+  it('offers the favourite session as a dropdown grouped by room', () => {
+    render(<FeedbackForm kind="attendee" />);
+    const select = screen.getByLabelText(/favourite session/i) as HTMLSelectElement;
+    expect(select.tagName).toBe('SELECT');
+    expect(select.querySelectorAll('optgroup')).toHaveLength(4);
+    expect(select.querySelectorAll('option:not([disabled])')).toHaveLength(25);
+    expect(within(select).getByRole('option', { name: /Building Distributed Systems with gRPC — Adeshina Lasisi/ })).toBeInTheDocument();
   });
 
   it('only shows the Vibe Lounge rating after answering Yes', () => {
@@ -99,7 +109,7 @@ describe('FeedbackForm', () => {
     expect(ref).toMatchObject({ name: 'attendeeFeedback' });
     expect(data).toEqual({
       overall: 5, nps: 9, venue: 4, sessions: 5, organisation: 4, food: 3, networking: 5,
-      halls: ['Vibe Lounge'], favourite: 'The keynote', enjoyedMost: 'The quiz', improve: 'More seats',
+      halls: ['Vibe Lounge'], favourite: SESSION_GROUPS[2].options[0], enjoyedMost: 'The quiz', improve: 'More seats',
       tookQuiz: 'No', tookVibe: 'No', topics: ['AI'], role: 'First time in tech', heardFrom: 'Twitter',
       email: 'ada@example.com', createdAt: 'SERVER_TIMESTAMP',
     });

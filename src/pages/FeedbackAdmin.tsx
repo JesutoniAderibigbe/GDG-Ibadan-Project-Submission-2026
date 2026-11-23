@@ -98,6 +98,28 @@ function Responses({ kind }: { kind: FeedbackKind }) {
         ))}
       </div>
 
+      {fields
+        .filter((f) => f.kind === 'select')
+        .map((f) => {
+          const tally = new Map<string, number>();
+          rows.forEach((r) => typeof r[f.name] === 'string' && tally.set(r[f.name] as string, (tally.get(r[f.name] as string) ?? 0) + 1));
+          const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1]);
+          if (!ranked.length) return null;
+          return (
+            <section key={f.name}>
+              <h3 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest mb-2">{f.label} (votes)</h3>
+              <ol className="space-y-2">
+                {ranked.map(([option, votes]) => (
+                  <li key={option} className="bg-white rounded-xl border border-brand-ink/10 p-3 text-sm flex justify-between gap-3">
+                    <span className="break-words">{option}</span>
+                    <span className="font-bold shrink-0">{votes}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          );
+        })}
+
       {textFields.map((f) => {
         const answers = rows.map((r) => r[f.name]).filter((v): v is string => typeof v === 'string' && v.length > 0);
         if (!answers.length) return null;

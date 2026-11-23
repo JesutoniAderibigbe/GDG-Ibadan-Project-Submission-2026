@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { ATTENDEE_FIELDS, SPONSOR_FIELDS, buildPayload, npsScore, ratingStats, toCsv } from '../feedback';
+import { ATTENDEE_FIELDS, SESSION_GROUPS, SPONSOR_FIELDS, buildPayload, npsScore, ratingStats, toCsv } from '../feedback';
 import type { FormValues } from '../feedback';
 
 const attendeeBase = {
   overall: 5, nps: 9, venue: 4, sessions: 5, organisation: 4, food: 3, networking: 5,
-  halls: ['Hall 2'], favourite: 'The keynote', enjoyedMost: 'The quiz', improve: 'More seats',
+  halls: ['Hall 2'], favourite: SESSION_GROUPS[0].options[0], enjoyedMost: 'The quiz', improve: 'More seats',
   tookQuiz: 'No', tookVibe: 'No', topics: ['AI'], role: 'Developer', heardFrom: 'Twitter', email: 'ada@example.com',
 };
 const sponsorBase = {
@@ -70,8 +70,14 @@ describe('buildPayload (attendee)', () => {
     expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, email: 'nope' }).ok).toBe(false);
   });
 
+  it('only accepts a favourite that is one of the real sessions', () => {
+    expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, favourite: 'Some made-up talk' }).ok).toBe(false);
+    const last = SESSION_GROUPS[SESSION_GROUPS.length - 1].options.slice(-1)[0];
+    expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, favourite: last }).ok).toBe(true);
+  });
+
   it('enforces text length limits', () => {
-    expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, favourite: 'x'.repeat(301) }).ok).toBe(false);
+    expect(buildPayload(ATTENDEE_FIELDS, { ...attendeeBase, heardFrom: 'x'.repeat(201) }).ok).toBe(false);
   });
 });
 
@@ -84,6 +90,19 @@ describe('buildPayload (sponsor)', () => {
     for (const k of Object.keys(sponsorBase)) {
       expect(buildPayload(SPONSOR_FIELDS, without(sponsorBase, k)).ok, `${k} should be required`).toBe(false);
     }
+  });
+});
+
+describe('SESSION_GROUPS', () => {
+  const all = SESSION_GROUPS.flatMap((g) => g.options);
+
+  it('lists all 25 sessions across the four rooms, with no duplicates', () => {
+    expect(SESSION_GROUPS.map((g) => g.options.length)).toEqual([4, 9, 8, 4]);
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it('keeps every option within the 300-character limit enforced by the Firestore rules', () => {
+    expect(Math.max(...all.map((o) => o.length))).toBeLessThanOrEqual(300);
   });
 });
 
