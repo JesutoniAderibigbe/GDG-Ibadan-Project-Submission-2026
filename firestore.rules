@@ -58,5 +58,82 @@ service cloud.firestore {
     match /{path=**}/ratings/{judgeId} {
       allow read: if true;
     }
+
+    // ---- Feedback forms (attendees + sponsors) ----
+    // Anyone may create a well-formed response; only organisers can read them.
+    // Keep the field names/options/limits in sync with src/lib/feedback.ts.
+
+    // Only the dedicated feedback-admin account (email/password) may read responses.
+    // Matched by uid, not email: email/password sign-up is open on this project, so
+    // anyone can register an account, but nobody else can ever have this uid.
+    function isFeedbackAdmin() {
+      return request.auth != null
+        && request.auth.uid in ['6vkC2F2VDSN1k2zJMZ06HykUFPj2'];
+    }
+
+    function isInt(v, lo, hi) { return v is int && v >= lo && v <= hi; }
+    function optInt(d, k, lo, hi) { return !(k in d) || isInt(d[k], lo, hi); }
+    function optStr(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() > 0 && d[k].size() <= max); }
+    function optEnum(d, k, opts) { return !(k in d) || (d[k] is string && d[k] in opts); }
+    function optList(d, k, opts) {
+      return !(k in d) || (d[k] is list && d[k].size() > 0 && d[k].size() <= opts.size() && d[k].hasOnly(opts));
+    }
+    function optEmail(d, required) {
+      return (!('email' in d) && !required)
+        || ('email' in d && d.email is string && d.email.size() > 0 && d.email.size() <= 320
+            && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'));
+    }
+
+    function isValidAttendeeFeedback(d) {
+      return d.keys().hasAll(['overall', 'nps', 'venue', 'sessions', 'organisation', 'food', 'networking', 'createdAt'])
+        && d.keys().hasOnly(['overall', 'nps', 'venue', 'sessions', 'organisation', 'food', 'networking',
+                             'halls', 'favourite', 'enjoyedMost', 'improve', 'tookQuiz', 'quizRating',
+                             'sawShowcase', 'showcaseRating', 'topics', 'role', 'heardFrom', 'email', 'createdAt'])
+        && isInt(d.overall, 1, 5) && isInt(d.nps, 0, 10)
+        && isInt(d.venue, 1, 5) && isInt(d.sessions, 1, 5) && isInt(d.organisation, 1, 5)
+        && isInt(d.food, 1, 5) && isInt(d.networking, 1, 5)
+        && optList(d, 'halls', ['Hall 1', 'Hall 2', 'Hall 3', 'Hall 4'])
+        && optStr(d, 'favourite', 300) && optStr(d, 'enjoyedMost', 1500) && optStr(d, 'improve', 1500)
+        && optEnum(d, 'tookQuiz', ['Yes', 'No']) && optInt(d, 'quizRating', 1, 5)
+        && optEnum(d, 'sawShowcase', ['Yes', 'No']) && optInt(d, 'showcaseRating', 1, 5)
+        && optList(d, 'topics', ['AI', 'Web', 'Mobile', 'Cloud', 'Design', 'Career', 'Other'])
+        && optEnum(d, 'role', ['Student', 'Developer', 'Designer', 'Other'])
+        && optStr(d, 'heardFrom', 200)
+        && optEmail(d, false)
+        && d.createdAt == request.time;
+    }
+
+    function isValidSponsorFeedback(d) {
+      return d.keys().hasAll(['company', 'contactName', 'email', 'overall', 'communication', 'booth', 'visibility',
+                              'audience', 'talent', 'value', 'sponsorAgain', 'createdAt'])
+        && d.keys().hasOnly(['company', 'contactName', 'email', 'overall', 'communication', 'booth', 'visibility',
+                             'audience', 'talent', 'value', 'goalLeads', 'goalHiring', 'goalAwareness',
+                             'goalProductFeedback', 'conversations', 'worked', 'improve', 'sponsorAgain',
+                             'nextPackage', 'createdAt'])
+        && d.company is string && d.company.size() > 0 && d.company.size() <= 150
+        && d.contactName is string && d.contactName.size() > 0 && d.contactName.size() <= 150
+        && optEmail(d, true)
+        && isInt(d.overall, 1, 5) && isInt(d.communication, 1, 5) && isInt(d.booth, 1, 5)
+        && isInt(d.visibility, 1, 5) && isInt(d.audience, 1, 5) && isInt(d.talent, 1, 5) && isInt(d.value, 1, 5)
+        && optEnum(d, 'goalLeads', ['Yes', 'Partly', 'No']) && optEnum(d, 'goalHiring', ['Yes', 'Partly', 'No'])
+        && optEnum(d, 'goalAwareness', ['Yes', 'Partly', 'No']) && optEnum(d, 'goalProductFeedback', ['Yes', 'Partly', 'No'])
+        && optEnum(d, 'conversations', ['0-10', '11-30', '31-60', '60+'])
+        && optStr(d, 'worked', 1500) && optStr(d, 'improve', 1500)
+        && d.sponsorAgain in ['Definitely', 'Probably', 'Unsure', 'No']
+        && optStr(d, 'nextPackage', 500)
+        && d.createdAt == request.time;
+    }
+
+    match /attendeeFeedback/{id} {
+      allow create: if isValidAttendeeFeedback(request.resource.data);
+      allow read: if isFeedbackAdmin();
+      allow update, delete: if false;
+    }
+
+    match /sponsorFeedback/{id} {
+      allow create: if isValidSponsorFeedback(request.resource.data);
+      allow read: if isFeedbackAdmin();
+      allow update, delete: if false;
+    }
   }
 }
