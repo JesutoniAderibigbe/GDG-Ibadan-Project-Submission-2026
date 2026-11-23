@@ -5,6 +5,7 @@ import {
   FEEDBACK_COLLECTIONS,
   FIELDS_BY_KIND,
   buildPayload,
+  isVisible,
   type Field,
   type FeedbackKind,
   type FormValues,
@@ -29,10 +30,9 @@ const INPUT =
 const LABEL = 'block text-[10px] font-mono font-bold uppercase text-slate-500 tracking-widest';
 
 function Label({ field, htmlFor }: { field: Field; htmlFor?: string }) {
-  const required = 'required' in field && field.required;
   return (
     <label htmlFor={htmlFor} className={LABEL}>
-      {field.label} {!required && <span className="normal-case tracking-normal text-slate-400 font-normal">(optional)</span>}
+      {field.label}
     </label>
   );
 }
@@ -204,6 +204,7 @@ export default function FeedbackForm({ kind }: { kind: FeedbackKind }) {
             onChange={(e) => set(f.name, e.target.value)}
             className={INPUT}
             placeholder={f.placeholder}
+            required
           />
         );
     }
@@ -239,7 +240,7 @@ export default function FeedbackForm({ kind }: { kind: FeedbackKind }) {
                   {error}
                 </div>
               )}
-              {fields.map((f) => (
+              {fields.filter((f) => isVisible(f, values)).map((f) => (
                 <div key={f.name} className="space-y-2">
                   <Label field={f} htmlFor={f.kind === 'text' || f.kind === 'textarea' ? f.name : undefined} />
                   {'hint' in f && f.hint && <p className="text-[11px] text-slate-400">{f.hint}</p>}

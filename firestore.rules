@@ -72,55 +72,55 @@ service cloud.firestore {
     }
 
     function isInt(v, lo, hi) { return v is int && v >= lo && v <= hi; }
-    function optInt(d, k, lo, hi) { return !(k in d) || isInt(d[k], lo, hi); }
-    function optStr(d, k, max) { return !(k in d) || (d[k] is string && d[k].size() > 0 && d[k].size() <= max); }
-    function optEnum(d, k, opts) { return !(k in d) || (d[k] is string && d[k] in opts); }
-    function optList(d, k, opts) {
-      return !(k in d) || (d[k] is list && d[k].size() > 0 && d[k].size() <= opts.size() && d[k].hasOnly(opts));
-    }
-    function optEmail(d, required) {
-      return (!('email' in d) && !required)
-        || ('email' in d && d.email is string && d.email.size() > 0 && d.email.size() <= 320
-            && d.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$'));
+    function isStr(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+    function isEnum(v, opts) { return v is string && v in opts; }
+    function isList(v, opts) { return v is list && v.size() > 0 && v.size() <= opts.size() && v.hasOnly(opts); }
+    function isEmail(v) {
+      return v is string && v.size() > 0 && v.size() <= 320 && v.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
     }
 
+    // Every question is required. quizRating / vibeRating exist only when the
+    // matching "did you take part" answer is Yes.
     function isValidAttendeeFeedback(d) {
-      return d.keys().hasAll(['overall', 'nps', 'venue', 'sessions', 'organisation', 'food', 'networking', 'createdAt'])
+      return d.keys().hasAll(['overall', 'nps', 'venue', 'sessions', 'organisation', 'food', 'networking',
+                              'halls', 'favourite', 'enjoyedMost', 'improve', 'tookQuiz', 'tookVibe',
+                              'topics', 'role', 'heardFrom', 'email', 'createdAt'])
         && d.keys().hasOnly(['overall', 'nps', 'venue', 'sessions', 'organisation', 'food', 'networking',
                              'halls', 'favourite', 'enjoyedMost', 'improve', 'tookQuiz', 'quizRating',
-                             'sawShowcase', 'showcaseRating', 'topics', 'role', 'heardFrom', 'email', 'createdAt'])
+                             'tookVibe', 'vibeRating', 'topics', 'role', 'heardFrom', 'email', 'createdAt'])
         && isInt(d.overall, 1, 5) && isInt(d.nps, 0, 10)
         && isInt(d.venue, 1, 5) && isInt(d.sessions, 1, 5) && isInt(d.organisation, 1, 5)
         && isInt(d.food, 1, 5) && isInt(d.networking, 1, 5)
-        && optList(d, 'halls', ['Hall 1', 'Hall 2', 'Hall 3', 'Hall 4'])
-        && optStr(d, 'favourite', 300) && optStr(d, 'enjoyedMost', 1500) && optStr(d, 'improve', 1500)
-        && optEnum(d, 'tookQuiz', ['Yes', 'No']) && optInt(d, 'quizRating', 1, 5)
-        && optEnum(d, 'sawShowcase', ['Yes', 'No']) && optInt(d, 'showcaseRating', 1, 5)
-        && optList(d, 'topics', ['AI', 'Web', 'Mobile', 'Cloud', 'Design', 'Career', 'Other'])
-        && optEnum(d, 'role', ['Student', 'Developer', 'Designer', 'Other'])
-        && optStr(d, 'heardFrom', 200)
-        && optEmail(d, false)
+        && isList(d.halls, ['Main Hall (Hall 1)', 'Hall 2', 'Hall 3', 'Vibe Lounge'])
+        && isStr(d.favourite, 300) && isStr(d.enjoyedMost, 1500) && isStr(d.improve, 1500)
+        && isEnum(d.tookQuiz, ['Yes', 'No'])
+        && ((d.tookQuiz == 'Yes') == ('quizRating' in d))
+        && (!('quizRating' in d) || isInt(d.quizRating, 1, 5))
+        && isEnum(d.tookVibe, ['Yes', 'No'])
+        && ((d.tookVibe == 'Yes') == ('vibeRating' in d))
+        && (!('vibeRating' in d) || isInt(d.vibeRating, 1, 5))
+        && isList(d.topics, ['AI', 'Web', 'Mobile', 'Cloud', 'Design', 'Career', 'Other'])
+        && isEnum(d.role, ['Developer', 'Designer', 'First time in tech'])
+        && isStr(d.heardFrom, 200)
+        && isEmail(d.email)
         && d.createdAt == request.time;
     }
 
     function isValidSponsorFeedback(d) {
       return d.keys().hasAll(['company', 'contactName', 'email', 'overall', 'communication', 'booth', 'visibility',
-                              'audience', 'talent', 'value', 'sponsorAgain', 'createdAt'])
-        && d.keys().hasOnly(['company', 'contactName', 'email', 'overall', 'communication', 'booth', 'visibility',
-                             'audience', 'talent', 'value', 'goalLeads', 'goalHiring', 'goalAwareness',
-                             'goalProductFeedback', 'conversations', 'worked', 'improve', 'sponsorAgain',
-                             'nextPackage', 'createdAt'])
-        && d.company is string && d.company.size() > 0 && d.company.size() <= 150
-        && d.contactName is string && d.contactName.size() > 0 && d.contactName.size() <= 150
-        && optEmail(d, true)
+                              'audience', 'talent', 'value', 'goalLeads', 'goalHiring', 'goalAwareness',
+                              'goalProductFeedback', 'conversations', 'worked', 'improve', 'sponsorAgain',
+                              'nextPackage', 'createdAt'])
+        && d.keys().size() == 20
+        && isStr(d.company, 150) && isStr(d.contactName, 150) && isEmail(d.email)
         && isInt(d.overall, 1, 5) && isInt(d.communication, 1, 5) && isInt(d.booth, 1, 5)
         && isInt(d.visibility, 1, 5) && isInt(d.audience, 1, 5) && isInt(d.talent, 1, 5) && isInt(d.value, 1, 5)
-        && optEnum(d, 'goalLeads', ['Yes', 'Partly', 'No']) && optEnum(d, 'goalHiring', ['Yes', 'Partly', 'No'])
-        && optEnum(d, 'goalAwareness', ['Yes', 'Partly', 'No']) && optEnum(d, 'goalProductFeedback', ['Yes', 'Partly', 'No'])
-        && optEnum(d, 'conversations', ['0-10', '11-30', '31-60', '60+'])
-        && optStr(d, 'worked', 1500) && optStr(d, 'improve', 1500)
-        && d.sponsorAgain in ['Definitely', 'Probably', 'Unsure', 'No']
-        && optStr(d, 'nextPackage', 500)
+        && isEnum(d.goalLeads, ['Yes', 'Partly', 'No']) && isEnum(d.goalHiring, ['Yes', 'Partly', 'No'])
+        && isEnum(d.goalAwareness, ['Yes', 'Partly', 'No']) && isEnum(d.goalProductFeedback, ['Yes', 'Partly', 'No'])
+        && isEnum(d.conversations, ['0-10', '11-30', '31-60', '60+'])
+        && isStr(d.worked, 1500) && isStr(d.improve, 1500)
+        && isEnum(d.sponsorAgain, ['Definitely', 'Probably', 'Unsure', 'No'])
+        && isStr(d.nextPackage, 500)
         && d.createdAt == request.time;
     }
 

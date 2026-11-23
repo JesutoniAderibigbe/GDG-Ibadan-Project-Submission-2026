@@ -13,55 +13,68 @@ export const FEEDBACK_COLLECTIONS: Record<FeedbackKind, string> = {
   sponsor: 'sponsorFeedback',
 };
 
-export type Field =
-  | { kind: 'text'; name: string; label: string; required?: boolean; max: number; inputType?: 'text' | 'email'; placeholder?: string; hint?: string }
-  | { kind: 'textarea'; name: string; label: string; required?: boolean; max: number; placeholder?: string; hint?: string }
-  | { kind: 'rating'; name: string; label: string; required?: boolean } // 1-5
-  | { kind: 'nps'; name: string; label: string; required?: boolean } // 0-10
-  | { kind: 'single'; name: string; label: string; options: string[]; required?: boolean }
-  | { kind: 'multi'; name: string; label: string; options: string[] };
+// Every question is required. A field with `showIf` is only shown (and only
+// required/stored) while another single-choice answer equals the given value,
+// e.g. the Vibe Lounge rating only appears after answering "Yes".
+interface FieldBase {
+  name: string;
+  label: string;
+  showIf?: { name: string; equals: string };
+}
 
-export const HALLS = ['Hall 1', 'Hall 2', 'Hall 3', 'Hall 4'];
+export type Field =
+  | (FieldBase & { kind: 'text'; max: number; inputType?: 'text' | 'email'; placeholder?: string; hint?: string })
+  | (FieldBase & { kind: 'textarea'; max: number; placeholder?: string; hint?: string })
+  | (FieldBase & { kind: 'rating' }) // 1-5
+  | (FieldBase & { kind: 'nps' }) // 0-10
+  | (FieldBase & { kind: 'single'; options: string[] })
+  | (FieldBase & { kind: 'multi'; options: string[] });
+
+export function isVisible(f: Field, values: Record<string, unknown>): boolean {
+  return !f.showIf || values[f.showIf.name] === f.showIf.equals;
+}
+
+export const HALLS = ['Main Hall (Hall 1)', 'Hall 2', 'Hall 3', 'Vibe Lounge'];
 export const TOPICS = ['AI', 'Web', 'Mobile', 'Cloud', 'Design', 'Career', 'Other'];
-export const ROLES = ['Student', 'Developer', 'Designer', 'Other'];
+export const ROLES = ['Developer', 'Designer', 'First time in tech'];
 export const YES_NO = ['Yes', 'No'];
 export const GOAL_OPTIONS = ['Yes', 'Partly', 'No'];
 export const CONVERSATION_BUCKETS = ['0-10', '11-30', '31-60', '60+'];
 export const SPONSOR_AGAIN = ['Definitely', 'Probably', 'Unsure', 'No'];
 
 export const ATTENDEE_FIELDS: Field[] = [
-  { kind: 'rating', name: 'overall', label: 'Overall experience', required: true },
-  { kind: 'nps', name: 'nps', label: 'How likely are you to recommend DevFest Ibadan to a friend?', required: true },
-  { kind: 'rating', name: 'venue', label: 'Venue', required: true },
-  { kind: 'rating', name: 'sessions', label: 'Sessions and speakers', required: true },
-  { kind: 'rating', name: 'organisation', label: 'Organisation', required: true },
-  { kind: 'rating', name: 'food', label: 'Food and refreshments', required: true },
-  { kind: 'rating', name: 'networking', label: 'Networking', required: true },
+  { kind: 'rating', name: 'overall', label: 'Overall experience' },
+  { kind: 'nps', name: 'nps', label: 'How likely are you to recommend DevFest Ibadan to a friend?' },
+  { kind: 'rating', name: 'venue', label: 'Venue' },
+  { kind: 'rating', name: 'sessions', label: 'Sessions and speakers' },
+  { kind: 'rating', name: 'organisation', label: 'Organisation' },
+  { kind: 'rating', name: 'food', label: 'Food and refreshments' },
+  { kind: 'rating', name: 'networking', label: 'Networking' },
   { kind: 'multi', name: 'halls', label: 'Which hall(s) did you spend most time in?', options: HALLS },
-  { kind: 'text', name: 'favourite', label: 'Favourite session or speaker', max: 300, placeholder: 'Optional' },
+  { kind: 'text', name: 'favourite', label: 'Favourite session or speaker', max: 300 },
   { kind: 'textarea', name: 'enjoyedMost', label: 'What did you enjoy most?', max: 1500 },
   { kind: 'textarea', name: 'improve', label: 'What should we improve?', max: 1500 },
   { kind: 'single', name: 'tookQuiz', label: 'Did you take part in the quiz?', options: YES_NO },
-  { kind: 'rating', name: 'quizRating', label: 'If yes, how would you rate the quiz?' },
-  { kind: 'single', name: 'sawShowcase', label: 'Did you see the project showcase?', options: YES_NO },
-  { kind: 'rating', name: 'showcaseRating', label: 'If yes, how would you rate the project showcase?' },
+  { kind: 'rating', name: 'quizRating', label: 'How would you rate the quiz?', showIf: { name: 'tookQuiz', equals: 'Yes' } },
+  { kind: 'single', name: 'tookVibe', label: 'Did you take part in the Vibe Lounge?', options: YES_NO },
+  { kind: 'rating', name: 'vibeRating', label: 'How would you rate the Vibe Lounge?', showIf: { name: 'tookVibe', equals: 'Yes' } },
   { kind: 'multi', name: 'topics', label: 'Which topics do you want next year?', options: TOPICS },
   { kind: 'single', name: 'role', label: 'Your role', options: ROLES },
-  { kind: 'text', name: 'heardFrom', label: 'How did you hear about us?', max: 200, placeholder: 'Optional' },
-  { kind: 'text', name: 'email', label: 'Email', inputType: 'email', max: 320, placeholder: 'Optional, only if you want us to follow up' },
+  { kind: 'text', name: 'heardFrom', label: 'How did you hear about us?', max: 200 },
+  { kind: 'text', name: 'email', label: 'Email', inputType: 'email', max: 320, placeholder: 'you@example.com' },
 ];
 
 export const SPONSOR_FIELDS: Field[] = [
-  { kind: 'text', name: 'company', label: 'Company name', required: true, max: 150 },
-  { kind: 'text', name: 'contactName', label: 'Your name', required: true, max: 150 },
-  { kind: 'text', name: 'email', label: 'Contact email', inputType: 'email', required: true, max: 320, hint: 'So we can follow up' },
-  { kind: 'rating', name: 'overall', label: 'Overall satisfaction with the sponsorship', required: true },
-  { kind: 'rating', name: 'communication', label: 'Pre-event communication', required: true },
-  { kind: 'rating', name: 'booth', label: 'Booth or placement', required: true },
-  { kind: 'rating', name: 'visibility', label: 'Brand visibility', required: true },
-  { kind: 'rating', name: 'audience', label: 'Quality of the audience', required: true },
-  { kind: 'rating', name: 'talent', label: 'Access to talent', required: true },
-  { kind: 'rating', name: 'value', label: 'Value for money', required: true },
+  { kind: 'text', name: 'company', label: 'Company name', max: 150 },
+  { kind: 'text', name: 'contactName', label: 'Your name', max: 150 },
+  { kind: 'text', name: 'email', label: 'Contact email', inputType: 'email', max: 320, hint: 'So we can follow up' },
+  { kind: 'rating', name: 'overall', label: 'Overall satisfaction with the sponsorship' },
+  { kind: 'rating', name: 'communication', label: 'Pre-event communication' },
+  { kind: 'rating', name: 'booth', label: 'Booth or placement' },
+  { kind: 'rating', name: 'visibility', label: 'Brand visibility' },
+  { kind: 'rating', name: 'audience', label: 'Quality of the audience' },
+  { kind: 'rating', name: 'talent', label: 'Access to talent' },
+  { kind: 'rating', name: 'value', label: 'Value for money' },
   { kind: 'single', name: 'goalLeads', label: 'Did you meet your goal: leads?', options: GOAL_OPTIONS },
   { kind: 'single', name: 'goalHiring', label: 'Did you meet your goal: hiring?', options: GOAL_OPTIONS },
   { kind: 'single', name: 'goalAwareness', label: 'Did you meet your goal: brand awareness?', options: GOAL_OPTIONS },
@@ -69,8 +82,8 @@ export const SPONSOR_FIELDS: Field[] = [
   { kind: 'single', name: 'conversations', label: 'Roughly how many meaningful conversations did you have?', options: CONVERSATION_BUCKETS },
   { kind: 'textarea', name: 'worked', label: 'What worked well?', max: 1500 },
   { kind: 'textarea', name: 'improve', label: 'What could we improve?', max: 1500 },
-  { kind: 'single', name: 'sponsorAgain', label: 'Likelihood to sponsor next year', options: SPONSOR_AGAIN, required: true },
-  { kind: 'text', name: 'nextPackage', label: 'Preferred package or support next time', max: 500, placeholder: 'Optional' },
+  { kind: 'single', name: 'sponsorAgain', label: 'Likelihood to sponsor next year', options: SPONSOR_AGAIN },
+  { kind: 'text', name: 'nextPackage', label: 'Preferred package or support next time', max: 500 },
 ];
 
 export const FIELDS_BY_KIND: Record<FeedbackKind, Field[]> = {
@@ -82,45 +95,43 @@ export type FormValues = Record<string, string | number | string[] | undefined>;
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-// Validates the raw form values and returns the document to store: optional
-// fields that were left empty are omitted, so Firestore rules can treat
-// "present" as "filled in".
+// Validates the raw form values and returns the document to store. Every
+// visible question is required; questions hidden by `showIf` are skipped and
+// never stored, so Firestore rules can tie them to the answer that unlocks them.
 export function buildPayload(
   fields: Field[],
   values: FormValues,
 ): { ok: true; payload: Record<string, string | number | string[]> } | { ok: false; error: string } {
   const payload: Record<string, string | number | string[]> = {};
+  const missing = (f: Field) => ({ ok: false as const, error: `Please answer: ${f.label}` });
+  const invalid = (f: Field) => ({ ok: false as const, error: `Invalid answer: ${f.label}` });
 
   for (const f of fields) {
+    if (!isVisible(f, values)) continue;
     const raw = values[f.name];
 
     if (f.kind === 'multi') {
       const picked = Array.isArray(raw) ? raw.filter((v) => f.options.includes(v)) : [];
-      if (picked.length) payload[f.name] = picked;
+      if (!picked.length) return missing(f);
+      payload[f.name] = picked;
       continue;
     }
 
     if (f.kind === 'rating' || f.kind === 'nps') {
       const min = f.kind === 'rating' ? 1 : 0;
       const max = f.kind === 'rating' ? 5 : 10;
-      if (raw === undefined || raw === '') {
-        if (f.required) return { ok: false, error: `Please answer: ${f.label}` };
-        continue;
-      }
+      if (raw === undefined || raw === '') return missing(f);
       const n = Number(raw);
-      if (!Number.isInteger(n) || n < min || n > max) return { ok: false, error: `Invalid answer: ${f.label}` };
+      if (!Number.isInteger(n) || n < min || n > max) return invalid(f);
       payload[f.name] = n;
       continue;
     }
 
     const text = typeof raw === 'string' ? raw.trim() : '';
-    if (!text) {
-      if (f.required) return { ok: false, error: `Please answer: ${f.label}` };
-      continue;
-    }
+    if (!text) return missing(f);
 
     if (f.kind === 'single') {
-      if (!f.options.includes(text)) return { ok: false, error: `Invalid answer: ${f.label}` };
+      if (!f.options.includes(text)) return invalid(f);
     } else {
       if (text.length > f.max) return { ok: false, error: `${f.label} must be at most ${f.max} characters` };
       if (f.kind === 'text' && f.inputType === 'email' && !EMAIL_RE.test(text)) {
